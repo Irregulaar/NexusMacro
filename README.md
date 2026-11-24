@@ -438,6 +438,10 @@ More detail:
   field, template and data path.
 - [`docs/REFACTOR_PLAN.md`](docs/REFACTOR_PLAN.md) — audit, refactor phases,
   measured performance and acceptance criteria.
+- [`docs/WINDOWS_PORT.md`](docs/WINDOWS_PORT.md) — what a Windows foreground
+  port needs and where the risks are.
+- [`docs/RUST_ASSESSMENT.md`](docs/RUST_ASSESSMENT.md) — Rust vs Python,
+  cross-platform plan and the real costs.
 - [`CHANGELOG.md`](CHANGELOG.md) — release history.
 
 ---
