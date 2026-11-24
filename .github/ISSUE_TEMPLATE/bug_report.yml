@@ -1,0 +1,53 @@
+name: Bug report
+description: Something did not work in Nexus Macro
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please attach the relevant log lines and, if
+        possible, the debug capture named in the log (PNG + JSON).
+  - type: input
+    id: version
+    attributes:
+      label: Nexus Macro version
+      description: Output of `NexusMacro --version`
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: Distribution, desktop and session (Wayland/X11), GPU, gamescope version.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Enabled Auto Spawners...
+        2. At 12:45 the shop opened...
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Paste the Log tab output around the failure.
+      render: text
+  - type: input
+    id: capture
+    attributes:
+      label: Debug capture
+      description: Filename under ~/.local/share/NexusMacro/captures/ (optional).
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I closed other Nexus Macro instances before reproducing.
+        - label: I removed account names/tokens from the log before posting.

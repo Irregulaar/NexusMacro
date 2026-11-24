@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libxkbcommon-x11-0 libxcb-cursor0 \
+            libxcb-xinerama0 libxcb-icccm4 libxcb-image0 \
+            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xfixes0 libx11-xcb1 libxtst6
+
+      - name: Check tag matches APP_VERSION
+        run: |
+          VERSION=$(grep -m1 '^APP_VERSION = ' nexusmacro/paths.py | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ "v$VERSION" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match APP_VERSION v$VERSION" >&2
+            exit 1
+          fi
+
+      - name: Create environment and install dependencies
+        run: |
+          python3 -m venv .venv
+          ./.venv/bin/python -m pip install --upgrade pip
+          ./.venv/bin/python -m pip install -r requirements.txt -r requirements-build.txt
+
+      - name: Test
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          ./.venv/bin/python -m unittest discover -s tests -q
+          ./.venv/bin/python app.py --selftest
+          ./.venv/bin/python app.py --ui-config-test
+
+      - name: Build standalone binary (system gamescope)
+        run: BUILD_WITH_VENDOR=0 ./build_linux.sh
+
+      - name: Verify packaged binary
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          ./dist/NexusMacro --version
+          ./dist/NexusMacro --selftest
+          ./dist/NexusMacro --ui-config-test
+
+      - name: Package release tarball
+        run: SKIP_BUILD=1 ./scripts/package_release.sh
+
+      - name: Show artifacts
+        run: ls -lh release/
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexusMacro-linux-x86_64
+          path: |
+            release/*.tar.gz
+            release/*.sha256
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Nexus Macro ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            release/*.tar.gz
+            release/*.sha256

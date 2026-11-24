@@ -1,0 +1,12 @@
+.venv/
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc
+.pytest_cache/
+captures/
+vendor/gamescope/
+
+config/
+release/

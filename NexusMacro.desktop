@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Nexus Macro
+GenericName=Build a Tower Defense Autopilot
+Comment=Compact automation macro for tower defense games on Sober/gamescope
+Exec=NexusMacro
+Icon=nexusmacro
+Terminal=false
+Categories=Game;
+Keywords=roblox;tower;defense;macro;autobattle;autofuse;gamescope;sober;nexus;
+StartupWMClass=NexusMacro
