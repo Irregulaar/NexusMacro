@@ -33,9 +33,12 @@ cp assets/icon.png "$STAGE/nexusmacro.png"
 cp assets/icon_512.png "$STAGE/nexusmacro-512.png"
 cp README.md LICENSE CHANGELOG.md "$STAGE/"
 
-ARCHIVE="release/${NAME}.tar.gz"
+ARCHIVE_NAME="${NAME}.tar.gz"
+ARCHIVE="release/${ARCHIVE_NAME}"
 tar -czf "$ARCHIVE" -C release "$NAME"
-sha256sum "$ARCHIVE" > "${ARCHIVE}.sha256"
+# The checksum file must contain only the basename, so it verifies after
+# download: sha256sum -c NexusMacro-...tar.gz.sha256
+( cd release && sha256sum "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256" )
 
 echo
 echo "Release artifact:"
