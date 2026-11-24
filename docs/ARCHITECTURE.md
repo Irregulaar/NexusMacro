@@ -27,7 +27,6 @@ porque gamescope fija la resolución interna.
 | **Auto Reconnect** | Si se pierde la ventana del juego y el macro lo lanzó, relanza Sober/gamescope y reinicia el motor. |
 | **Pantalla Reconnect** | Detecta `reconnectbutton.png`; no hace clic: cierra Sober/gamescope, relanza y reintenta si la conexión falla. |
 | **Auto Join** | Lanza Sober con `roblox://experience?placeId=...` y pulsa Play al aparecer. |
-| **Tab** | Pulsa Tab una vez al entrar a la partida para ocultar el leaderboard; se rearma con Play o Auto Reconnect. |
 | **Acciones manuales** | Buy Spawners Now, Fuse Now, Best Place Now, con etiquetas de progreso. |
 | **Launcher** | Lanza/para gamescope+Sober, minimiza/restaura la ventana host. |
 | **Config** | Autoguardado atómico, backup, aplicación en vivo y validación tolerante. |

@@ -46,7 +46,6 @@ The interface is a fixed **880×560** compact window with a dark purple theme.
 | **Buy Spawners Now** | Runs a full spawner purchase on demand, even while the macro is stopped. |
 | **Fuse Now / Best Place Now** | Manual actions; if a battle is running they Forfeit + Confirm first. |
 | **Auto Join** | Passes `roblox://experience?placeId=...` to Sober and clicks Play on the loading screen. |
-| **Tab** | Sends Tab only while `tabimage.png` (the leaderboard header) is visible. |
 | **Auto Reconnect** | Relaunches Sober/gamescope if the game window disappears, and restarts the engine. |
 | **Reconnect screen** | Detects `reconnectbutton.png`, **never clicks it**, closes Sober/gamescope and relaunches from scratch; retries later if the connection fails. |
 | **Portable config** | In a project/dev install, settings live in `<project>/config/`; release installs use `~/.config/NexusMacro/`. |
