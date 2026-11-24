@@ -100,6 +100,28 @@ The installer puts everything under `~/.local` (no sudo):
 Open **Nexus Macro** from the application menu. If your desktop does not show
 the new icon immediately, log out and back in once (KDE caches app icons).
 
+### Install with an AI assistant
+
+Copy this prompt into an AI agent that has terminal access (Claude Code,
+ChatGPT with a terminal, Cursor, etc.):
+
+```text
+Install Nexus Macro on this Linux PC from:
+https://github.com/Irregulaar/NexusMacro
+
+1. Check that this is Linux x86_64 and a Wayland session. If not, stop and explain.
+2. Ask me before any sudo command. Detect my distro and install gamescope + flatpak
+   (Arch: pacman, Fedora: dnf, Debian/Ubuntu: apt). Ensure the Flathub remote and
+   install org.vinegarhq.Sober. If gamescope is unavailable, stop and tell me.
+3. Download the latest release tarball and its .sha256 from GitHub Releases into
+   /tmp. Verify the checksum with sha256sum -c.
+4. Extract it and run ./install.sh (no sudo). Make sure ~/.local/bin is in PATH and
+   refresh the desktop/icon caches. Do not build from source.
+5. Run `NexusMacro --version` and tell me how to launch it from the menu.
+6. Do not launch the game or ask for my Roblox credentials. If a command fails,
+   show the exact error and stop instead of guessing.
+```
+
 ### Uninstall
 
 ```bash
