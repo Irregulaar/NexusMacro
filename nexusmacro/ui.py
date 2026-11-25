@@ -1100,7 +1100,7 @@ class MainWindow(UiPagesMixin, QMainWindow):
         self.side_status.setText("Reconnecting...")
         self.side_dot.setStyleSheet("color:#f5b84b; font-size:12px;")
         self.launcher.start_async(
-            on_log=self.launcher_bridge.log.emit,
+            on_log=self._emit_launcher_log,
             on_status=self.launcher_bridge.status.emit,
             on_ready=self.launcher_bridge.ready.emit,
             on_error=self.launcher_bridge.error.emit,
@@ -1283,12 +1283,15 @@ class MainWindow(UiPagesMixin, QMainWindow):
         self.side_dot.setStyleSheet("color:#f5b84b; font-size:12px;")
         self._append_log(message, "action")
         self.launcher.start_async(
-            on_log=self.launcher_bridge.log.emit,
+            on_log=self._emit_launcher_log,
             on_status=self.launcher_bridge.status.emit,
             on_ready=self.launcher_bridge.ready.emit,
             on_error=self.launcher_bridge.error.emit,
             kill_existing=True,
         )
+
+    def _emit_launcher_log(self, message: str, level: str = "info") -> None:
+        self.launcher_bridge.log.emit(message, level)
 
     def _on_launcher_status(self, text: str) -> None:
         self.game_detail.setText(text)

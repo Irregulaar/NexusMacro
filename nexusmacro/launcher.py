@@ -317,7 +317,8 @@ class GamescopeLauncher:
             env = self._environment(gamescope)
             on_log(
                 "SDL video driver: "
-                + (env.get("SDL_VIDEODRIVER") or "auto")
+                + (env.get("SDL_VIDEODRIVER") or "auto"),
+                "info",
             )
             self._process = subprocess.Popen(
                 self._command(gamescope),

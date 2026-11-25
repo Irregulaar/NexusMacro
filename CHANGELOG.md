@@ -4,6 +4,14 @@ All notable changes to Nexus Macro. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic
 versioning.
 
+## 1.5.7 - 2026-11-24
+
+### Fixed
+- Launcher log signal arity: the new SDL driver line called
+  `LauncherBridge.log` with one argument (`log(QString,QString) needs 2
+  arguments, 1 given`). The UI now uses a safe callback with a default level
+  and the launcher passes `"info"`.
+
 ## 1.5.6 - 2026-11-24
 
 ### Fixed

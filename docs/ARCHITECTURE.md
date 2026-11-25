@@ -348,3 +348,4 @@ QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-config-test
   Wayland, escala de UI por resolución, detección robusta de `tabimage` y
   comprobación única de Classic Forfeit; 73 tests.
 - 2026-11-24: 1.5.6 busca gamescope también en `/usr/games` (Debian/Ubuntu).
+- 2026-11-24: 1.5.7 arregla la aridad de la señal de log del launcher.

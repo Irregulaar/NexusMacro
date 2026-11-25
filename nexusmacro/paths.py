@@ -11,7 +11,7 @@ from typing import Optional
 DISPLAY_NAME = "Nexus Macro"
 APP_NAME = "NexusMacro"
 LEGACY_APP_NAME = "TowerPilot"  # only used to migrate old installs
-APP_VERSION = "1.5.6"
+APP_VERSION = "1.5.7"
 
 
 def bundle_root() -> Path:
