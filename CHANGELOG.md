@@ -16,6 +16,11 @@ versioning.
   panel and uses the panel's X to close. Escape is only a fallback and is not
   sent when the panel never opened.
 - Added `settingsclose.png` for the settings panel X.
+- Saved-battle **Discard** detection: the real modal button has an aspect ratio
+  of ~5.7 (rounded background), but the colour fallback required ≥6.0. It was
+  rejected, so the macro clicked Build through the modal and mistook the
+  modal's X for a shop close. The fallback now accepts ≥5.0 and the modal
+  Discard is clicked first.
 
 ## 1.5.6 - 2026-11-24
 

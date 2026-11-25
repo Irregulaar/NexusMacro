@@ -65,7 +65,7 @@ class ScreenDetector:
             x, y, w, h = cv2.boundingRect(contour)
             if not (90 <= w <= 210 and 11 <= h <= 25):
                 continue
-            if w / max(1, h) < 7.0:
+            if w / max(1, h) < 5.0:
                 continue
             roi = hsv[y : y + h, x : x + w]
             white = int(

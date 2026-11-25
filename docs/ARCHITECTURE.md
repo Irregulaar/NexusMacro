@@ -299,7 +299,7 @@ Close/Scroll.
 | `tests/test_ui_config.py` | Guardado de toggles/números, sync de spin, Stop cancela reconnect. |
 | `tests/test_config_persistence.py` | Roundtrip, valores inválidos, JSON corrupto, backup, bool strings. |
 
-Total: **74 tests OK**.
+Total: **75 tests OK**.
 
 Comandos:
 
@@ -347,7 +347,8 @@ QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-config-test
   y subtítulo “Build a Tower Defense Autopilot”.
 - 2026-11-24: 1.5.5 entorno limpio para flatpak/gamescope, fallback SDL
   Wayland, escala de UI por resolución, detección robusta de `tabimage` y
-  comprobación única de Classic Forfeit; 74 tests.
+  comprobación única de Classic Forfeit; 75 tests.
 - 2026-11-24: 1.5.6 busca gamescope también en `/usr/games` (Debian/Ubuntu).
-- 2026-11-24: 1.5.7 arregla la aridad de la señal de log del launcher y el
-  scroll/cierre del panel de Settings (X, sin Escape si no se abrió).
+- 2026-11-24: 1.5.7 arregla la aridad de la señal de log del launcher, el
+  scroll/cierre del panel de Settings (X) y el fallback de Discard (aspecto
+  real del botón).

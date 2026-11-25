@@ -158,6 +158,24 @@ class DetectionTest(unittest.TestCase):
         self.assertTrue(self.detector.game_ui(frame))
         self.assertFalse(self.detector.idle_match(frame))
 
+    def test_saved_battle_discard_uses_the_wide_red_fallback(self) -> None:
+        frame = self.frame.copy()
+        # Real modal button: wide red band with a soft/rounded background,
+        # aspect ~5.7 instead of the template's ~8.
+        cv2.rectangle(frame, (520, 428), (760, 470), (50, 50, 160), -1)
+        cv2.putText(
+            frame,
+            "Discard saved battle",
+            (570, 455),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
+            (255, 255, 255),
+            1,
+        )
+        match = self.detector.discard(frame)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.key, "discard")
+
     def test_red_build_badge_is_not_a_discard_button(self) -> None:
         frame = self.frame.copy()
         # A wide red Build-menu badge on the left, with white text.

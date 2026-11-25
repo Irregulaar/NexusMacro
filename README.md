@@ -430,7 +430,7 @@ QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-selftest
 QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-config-test
 ```
 
-Current status: **74 tests OK**.
+Current status: **75 tests OK**.
 
 ---
 
