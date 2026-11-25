@@ -163,6 +163,14 @@ TEMPLATE_SPECS: tuple[TemplateSpec, ...] = (
         dark_threshold=45,
     ),
     TemplateSpec(
+        "settingsclose",
+        "settingsclose.png",
+        "Settings close",
+        "X button of the Roblox settings panel.",
+        border_ignore=1,
+        dark_threshold=45,
+    ),
+    TemplateSpec(
         "forfeit",
         "forfeitbutton.png",
         "Forfeit",
@@ -221,6 +229,7 @@ DEFAULT_REGIONS: dict[str, tuple[float, float, float, float]] = {
     "play": (0.10, 0.35, 0.80, 0.60),
     "tabimage": (0.55, 0.0, 0.45, 0.35),
     "settingsbutton": (0.08, 0.0, 0.35, 0.14),
+    "settingsclose": (0.0, 0.0, 0.45, 0.35),
     "discard": (0.05, 0.20, 0.90, 0.70),
     "confirm": (0.10, 0.25, 0.80, 0.65),
     "fuseall": (0.0, 0.15, 0.60, 0.85),

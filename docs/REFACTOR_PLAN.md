@@ -114,7 +114,7 @@ verificado (menú cerrado, tienda cerrada, batalla iniciada).
 - [x] Auditoría y plan (`docs/REFACTOR_PLAN.md`).
 - [x] Mapa de código y funciones (`docs/ARCHITECTURE.md`).
 - [x] Baseline de tests: 38 OK.
-- [x] Añadir tests de scheduler/detección antes de mover código (73 tests).
+- [x] Añadir tests de scheduler/detección antes de mover código (74 tests).
 
 ### Fase 1 — Visión y contexto
 - [x] Crear `automation/context.py` con `Runtime`.
@@ -189,7 +189,7 @@ verificado (menú cerrado, tienda cerrada, batalla iniciada).
 | `play` find | 179 ms | ~30 ms |
 | `spawner1` find | 228 ms | ~66 ms |
 | `forfeit` find | 161 ms | ~16 ms |
-| Tests | 38 | 73 OK |
+| Tests | 38 | 74 OK |
 
 Cambios de comportamiento:
 - La tienda solo se abre/compra después de un clic de spawner.
@@ -220,7 +220,8 @@ Cambios de comportamiento:
   `<project>/config/`. Icono del usuario a 64/256/512 y `.desktop` con ruta
   absoluta. Quitado Open Templates; subtítulo “Build a Tower Defense
   Autopilot”.
-- 2026-11-24: **1.5.7** — arreglo de `log(QString,QString)` en el launcher.
+- 2026-11-24: **1.5.7** — arreglo de `log(QString,QString)` en el launcher y
+  scroll dentro del panel de Settings (cierre con X).
 - 2026-11-24: **1.5.6** — gamescope en `/usr/games` para Debian/Ubuntu.
 - 2026-11-24: **1.5.5** — arreglo de instalación en otras distros
   (`LD_LIBRARY_PATH` de PyInstaller, SDL Wayland, errores de flatpak), ventana

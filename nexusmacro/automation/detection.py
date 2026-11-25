@@ -147,6 +147,9 @@ class ScreenDetector:
     def settings_button(self, frame: np.ndarray) -> Optional[Match]:
         return self.runtime.find(frame, "settingsbutton", 0.72)
 
+    def settings_close(self, frame: np.ndarray) -> Optional[Match]:
+        return self.runtime.find(frame, "settingsclose", 0.72)
+
     def classic_forfeit_row(
         self, frame: np.ndarray
     ) -> Optional[ClassicRow]:

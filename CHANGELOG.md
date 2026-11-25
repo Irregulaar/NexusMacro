@@ -11,6 +11,11 @@ versioning.
   `LauncherBridge.log` with one argument (`log(QString,QString) needs 2
   arguments, 1 given`). The UI now uses a safe callback with a default level
   and the launcher passes `"info"`.
+- Classic Forfeit settings did not scroll: the wheel was sent at y=55%, just
+  below the settings panel (it ends around y=54%). It now scrolls inside the
+  panel and uses the panel's X to close. Escape is only a fallback and is not
+  sent when the panel never opened.
+- Added `settingsclose.png` for the settings panel X.
 
 ## 1.5.6 - 2026-11-24
 

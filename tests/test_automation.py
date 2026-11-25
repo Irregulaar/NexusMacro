@@ -489,6 +489,70 @@ class ShopSessionTest(unittest.TestCase):
         self.assertEqual(clicks, 1)
         self.assertGreaterEqual(scrolls, 1)
 
+class ClassicForfeitTest(unittest.TestCase):
+    def test_scrolls_inside_the_settings_panel_and_closes_with_x(self) -> None:
+        from nexusmacro.automation.classic import ClassicForfeit
+        from nexusmacro.automation.detection import ClassicRow
+
+        frame = np.full((720, 1280, 3), (18, 26, 36), np.uint8)
+
+        class Backend:
+            def __init__(self) -> None:
+                self.scrolls: list[tuple[int, int, int]] = []
+                self.clicks: list[tuple[int, int]] = []
+                self.keys: list[str] = []
+
+            def capture(self):
+                return frame
+
+            def click(self, x, y, button=1, park=None):
+                self.clicks.append((x, y))
+
+            def scroll(self, clicks, x=None, y=None):
+                self.scrolls.append((clicks, x, y))
+
+            def key(self, name):
+                self.keys.append(name)
+
+        backend = Backend()
+        config = Config()
+        config.save_debug_frames = False
+        callbacks = EngineCallbacks(
+            log=lambda *a: None,
+            status=lambda *a: None,
+            stats=lambda *a: None,
+            preview=lambda *a: None,
+        )
+        runtime = Runtime(
+            backend,
+            config,
+            Matcher(ROOT / "templates", ROOT / "templates", config),
+            callbacks,
+            threading.Event(),
+        )
+        runtime.sleep = lambda seconds: None
+
+        class Detector:
+            def settings_button(self, frame):
+                return Match("settingsbutton", 230, 20, 22, 22, 1.0)
+
+            def settings_close(self, frame):
+                return Match("settingsclose", 339, 80, 20, 20, 1.0)
+
+            def classic_forfeit_row(self, frame):
+                if not backend.scrolls:
+                    return None
+                return ClassicRow(
+                    Match("classicforfeitsetting", 30, 500, 247, 65, 1.0),
+                    True,
+                )
+
+        classic = ClassicForfeit(runtime, Detector())  # type: ignore[arg-type]
+        self.assertTrue(classic.ensure())
+        self.assertEqual(backend.scrolls, [(-2, 192, 273)])
+        self.assertEqual(backend.keys, [])
+        self.assertTrue(backend.clicks)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -32,21 +32,52 @@ class ClassicForfeit:
                     return False
                 self.runtime.click_match(gear, "Settings opened")
                 self.runtime.sleep(0.8)
+                frame = self.runtime.capture()
+                # The X confirms the panel actually opened. Without it,
+                # scrolling would hit the game map and Escape could close an
+                # unrelated menu.
+                close = self.detector.settings_close(frame)
+                if close is None:
+                    for _ in range(3):
+                        self.runtime.sleep(0.3)
+                        frame = self.runtime.capture()
+                        close = self.detector.settings_close(frame)
+                        if close is not None:
+                            break
+                if close is None:
+                    self.runtime.save_debug(
+                        frame,
+                        "settings_panel_not_open",
+                        "Clicked the settings gear but the panel X was not found",
+                    )
+                    self.runtime.log(
+                        "Classic Forfeit: settings panel did not open.",
+                        "warning",
+                    )
+                    return False
                 opened = True
 
-            for attempt in range(8):
+            for attempt in range(14):
                 frame = self.runtime.capture()
                 row = self.detector.classic_forfeit_row(frame)
                 if row is not None:
                     return self._apply(row)
+                close = self.detector.settings_close(frame)
+                if close is None:
+                    self.runtime.log(
+                        "Classic Forfeit: settings panel closed while scrolling.",
+                        "warning",
+                    )
+                    return False
                 if attempt == 0:
                     self.runtime.log(
                         "Classic Forfeit: scrolling settings to the bottom.",
                         "info",
                     )
                 h, w = frame.shape[:2]
+                # Inside the settings panel, not below it.
                 self.runtime.backend.scroll(
-                    -3, x=int(w * 0.16), y=int(h * 0.55)
+                    -2, x=int(w * 0.15), y=int(h * 0.38)
                 )
                 self.runtime.sleep(0.35)
 
@@ -63,7 +94,12 @@ class ClassicForfeit:
         finally:
             if opened:
                 try:
-                    self.runtime.key("Escape")
+                    frame = self.runtime.capture()
+                    close = self.detector.settings_close(frame)
+                    if close is not None:
+                        self.runtime.click_match(close, "Settings closed")
+                    else:
+                        self.runtime.key("Escape")
                     self.runtime.sleep(0.25)
                 except Exception:
                     pass

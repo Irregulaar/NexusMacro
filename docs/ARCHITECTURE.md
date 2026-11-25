@@ -249,6 +249,7 @@ Backup: `config.json.bak`.
 | tabimage | tabimage.png | Cabecera del leaderboard: solo entonces se pulsa Tab |
 | reconnectbutton | reconnectbutton.png | Pantalla de reconexión: **nunca se pulsa**; se reinicia Sober/gamescope |
 | settingsbutton | settingsbutton.png | Engranaje de Settings del juego |
+| settingsclose | settingsclose.png | X para cerrar el panel de Settings |
 | classicforfeitsetting | classicforfeitsetting.png | Fila Classic Forfeit (se detecta la etiqueta; el toggle se lee aparte) |
 
 Umbrales: `threshold` global 0.88; plantillas de acción bajan a 0.70–0.75;
@@ -298,7 +299,7 @@ Close/Scroll.
 | `tests/test_ui_config.py` | Guardado de toggles/números, sync de spin, Stop cancela reconnect. |
 | `tests/test_config_persistence.py` | Roundtrip, valores inválidos, JSON corrupto, backup, bool strings. |
 
-Total: **73 tests OK**.
+Total: **74 tests OK**.
 
 Comandos:
 
@@ -346,6 +347,7 @@ QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-config-test
   y subtítulo “Build a Tower Defense Autopilot”.
 - 2026-11-24: 1.5.5 entorno limpio para flatpak/gamescope, fallback SDL
   Wayland, escala de UI por resolución, detección robusta de `tabimage` y
-  comprobación única de Classic Forfeit; 73 tests.
+  comprobación única de Classic Forfeit; 74 tests.
 - 2026-11-24: 1.5.6 busca gamescope también en `/usr/games` (Debian/Ubuntu).
-- 2026-11-24: 1.5.7 arregla la aridad de la señal de log del launcher.
+- 2026-11-24: 1.5.7 arregla la aridad de la señal de log del launcher y el
+  scroll/cierre del panel de Settings (X, sin Escape si no se abrió).

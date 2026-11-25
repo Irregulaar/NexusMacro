@@ -326,7 +326,7 @@ spawners1.png      spawners2.png     spawnerbutton3.png
 build1.png         fuseallbutton.png placebestbutton.png
 stopbutton.png     forfeitbutton.png confirmbutton.png
 discardbutton.png  playbutton.png    tabimage.png
-reconnectbutton.png settingsbutton.png
+reconnectbutton.png settingsbutton.png settingsclose.png
 classicforfeitsetting.png
 buybutton.png      scrollspawner.png closebutton.png
 ```
@@ -430,7 +430,7 @@ QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-selftest
 QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-config-test
 ```
 
-Current status: **73 tests OK**.
+Current status: **74 tests OK**.
 
 ---
 
