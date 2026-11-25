@@ -442,8 +442,8 @@ Current status: **73 tests OK**.
 3. Create and push a tag:
 
 ```bash
-git tag v1.5.5
-git push origin v1.5.5
+git tag v1.5.6
+git push origin v1.5.6
 ```
 
 The GitHub Actions workflow `.github/workflows/release.yml` builds the binary
@@ -454,8 +454,8 @@ To build the same tarball locally:
 
 ```bash
 ./scripts/package_release.sh
-# release/NexusMacro-1.5.5-linux-x86_64.tar.gz
-# release/NexusMacro-1.5.5-linux-x86_64.tar.gz.sha256
+# release/NexusMacro-1.5.6-linux-x86_64.tar.gz
+# release/NexusMacro-1.5.6-linux-x86_64.tar.gz.sha256
 ```
 
 The release tarball contains the binary, `install.sh`, the desktop entry, the

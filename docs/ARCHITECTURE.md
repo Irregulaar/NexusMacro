@@ -347,3 +347,4 @@ QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-config-test
 - 2026-11-24: 1.5.5 entorno limpio para flatpak/gamescope, fallback SDL
   Wayland, escala de UI por resolución, detección robusta de `tabimage` y
   comprobación única de Classic Forfeit; 73 tests.
+- 2026-11-24: 1.5.6 busca gamescope también en `/usr/games` (Debian/Ubuntu).

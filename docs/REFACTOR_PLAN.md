@@ -220,6 +220,7 @@ Cambios de comportamiento:
   `<project>/config/`. Icono del usuario a 64/256/512 y `.desktop` con ruta
   absoluta. Quitado Open Templates; subtítulo “Build a Tower Defense
   Autopilot”.
+- 2026-11-24: **1.5.6** — gamescope en `/usr/games` para Debian/Ubuntu.
 - 2026-11-24: **1.5.5** — arreglo de instalación en otras distros
   (`LD_LIBRARY_PATH` de PyInstaller, SDL Wayland, errores de flatpak), ventana
   proporcional a la pantalla, Tab con CCOEFF real y Classic Forfeit automático

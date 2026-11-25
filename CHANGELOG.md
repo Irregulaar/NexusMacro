@@ -4,6 +4,13 @@ All notable changes to Nexus Macro. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic
 versioning.
 
+## 1.5.6 - 2026-11-24
+
+### Fixed
+- Find `gamescope` in `/usr/games`, `/usr/local/bin` and `/usr/bin` even when
+  the desktop-launched application has a reduced `PATH` (common on Debian and
+  Ubuntu, where gamescope lives in `/usr/games`).
+
 ## 1.5.5 - 2026-11-24
 
 ### Fixed

@@ -94,6 +94,16 @@ class GamescopeLauncher:
         system = shutil.which("gamescope")
         if system:
             return Path(system)
+        # Some distributions install gamescope in /usr/games, which is not
+        # always present in the PATH of a desktop-launched application.
+        for candidate in (
+            "/usr/games/gamescope",
+            "/usr/local/bin/gamescope",
+            "/usr/bin/gamescope",
+        ):
+            path = Path(candidate)
+            if path.is_file() and os.access(path, os.X_OK):
+                return path
         bundled = gamescope_vendor_bin()
         if bundled.is_file() and os.access(bundled, os.X_OK):
             return bundled
