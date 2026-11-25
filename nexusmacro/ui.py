@@ -679,6 +679,9 @@ class MainWindow(UiPagesMixin, QMainWindow):
         self.controller.game_restart_requested.connect(
             self._on_game_restart_requested
         )
+        self.controller.config_changed.connect(
+            self._on_engine_config_changed
+        )
 
         self.launcher_bridge.log.connect(self._append_log)
         self.launcher_bridge.status.connect(self._on_launcher_status)
@@ -755,6 +758,10 @@ class MainWindow(UiPagesMixin, QMainWindow):
                 "background:#141020; color:#8b8b96; border:1px solid #2c2440;"
             )
             self.footer_status.setText("Ready")
+
+    def _on_engine_config_changed(self, key: str, value: Any) -> None:
+        self._append_log(f"Setting saved by engine: {key} = {value}", "info")
+        self._set_config(key, value)
 
     def _on_engine_status(self, text: str) -> None:
         self.footer_status.setText(text)
@@ -1392,6 +1399,7 @@ class MainWindow(UiPagesMixin, QMainWindow):
                     ["flatpak", "kill", "org.vinegarhq.Sober"],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
+                    env=self.launcher.clean_env(),
                     check=False,
                 )
                 time.sleep(1.0)

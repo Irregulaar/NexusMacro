@@ -43,6 +43,7 @@ class EngineCallbacks:
     preview: Callable[[np.ndarray, list[Match]], None]
     manual_done: Optional[Callable[[], None]] = None
     restart_game: Optional[Callable[[str], None]] = None
+    config_changed: Optional[Callable[[str, Any], None]] = None
 
 
 class Runtime:

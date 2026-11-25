@@ -39,6 +39,12 @@ body:
       label: Log
       description: Paste the Log tab output around the failure.
       render: text
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Doctor output
+      description: Output of `NexusMacro --doctor`.
+      render: text
   - type: input
     id: capture
     attributes:

@@ -99,8 +99,31 @@ class GamescopeLauncher:
             return bundled
         return None
 
-    def _environment(self, gamescope: Path) -> dict[str, str]:
+    def clean_env(self) -> dict[str, str]:
+        """Environment for gamescope/flatpak child processes.
+
+        PyInstaller points LD_LIBRARY_PATH at its temporary extraction folder.
+        Passing that to gamescope/flatpak makes their system binaries load the
+        bundled libstdc++ and fail with GLIBCXX errors, so strip the
+        PyInstaller-specific variables.
+        """
         env = os.environ.copy()
+        for key in (
+            "LD_LIBRARY_PATH",
+            "LD_PRELOAD",
+            "PYTHONHOME",
+            "PYTHONPATH",
+            "QT_PLUGIN_PATH",
+            "QT_QPA_PLATFORM_PLUGIN_PATH",
+            "QT_SCALE_FACTOR",
+            "QT_SCREEN_SCALE_FACTORS",
+            "QT_AUTO_SCREEN_SCALE_FACTOR",
+        ):
+            env.pop(key, None)
+        return env
+
+    def _environment(self, gamescope: Path) -> dict[str, str]:
+        env = self.clean_env()
         # The local gamescope package ships its own libraries.
         if "vendor" in gamescope.parts:
             usr = gamescope.parent.parent  # .../vendor/gamescope/usr
@@ -111,8 +134,14 @@ class GamescopeLauncher:
             )
             env["PATH"] = str(bin_dir) + ":" + env.get("PATH", "")
         if self.config.gamescope_backend == "sdl":
-            # Force an X11 host window so Nexus Macro can minimize it via X11.
-            env["SDL_VIDEODRIVER"] = "x11"
+            # Prefer X11 so the host window can be minimized via X11. On a
+            # Wayland-only session, let SDL use Wayland instead of failing.
+            if env.get("DISPLAY"):
+                env["SDL_VIDEODRIVER"] = "x11"
+            elif env.get("WAYLAND_DISPLAY"):
+                env["SDL_VIDEODRIVER"] = "wayland"
+            else:
+                env.pop("SDL_VIDEODRIVER", None)
         return env
 
     def _command(self, gamescope: Path) -> list[str]:
@@ -139,6 +168,12 @@ class GamescopeLauncher:
             "env",
             "-u",
             "LD_LIBRARY_PATH",
+            "-u",
+            "LD_PRELOAD",
+            "-u",
+            "PYTHONHOME",
+            "-u",
+            "PYTHONPATH",
             "-u",
             "SDL_VIDEODRIVER",
             "flatpak",
@@ -182,6 +217,20 @@ class GamescopeLauncher:
         kill_existing: bool,
     ) -> None:
         try:
+            backend = self.config.gamescope_backend
+            if backend == "sdl" and not (
+                os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
+            ):
+                raise LauncherError(
+                    "No graphical session found (DISPLAY and WAYLAND_DISPLAY "
+                    "are empty). Start Nexus Macro from your desktop session, "
+                    "not from a TTY/SSH shell."
+                )
+            if backend == "wayland" and not os.environ.get("WAYLAND_DISPLAY"):
+                raise LauncherError(
+                    "Wayland mode is selected but WAYLAND_DISPLAY is empty. "
+                    "Start the macro from a Wayland desktop session."
+                )
             existing = self.connected_display()
             if existing:
                 host_window = None
@@ -212,13 +261,17 @@ class GamescopeLauncher:
                 raise LauncherError("I couldn't find flatpak in PATH.")
             info = subprocess.run(
                 ["flatpak", "info", "org.vinegarhq.Sober"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                env=self.clean_env(),
                 check=False,
             )
             if info.returncode != 0:
+                detail = (info.stderr or info.stdout or "").strip()
                 raise LauncherError(
-                    "Sober is not installed as a Flatpak (org.vinegarhq.Sober)."
+                    "Sober is not installed as a Flatpak "
+                    "(org.vinegarhq.Sober)."
+                    + (f"\n\n{detail}" if detail else "")
                 )
 
             if self._sober_running():
@@ -232,6 +285,7 @@ class GamescopeLauncher:
                     ["flatpak", "kill", "org.vinegarhq.Sober"],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
+                    env=self.clean_env(),
                     check=False,
                 )
                 # Wait until the old Sober instance has fully released its
@@ -251,6 +305,10 @@ class GamescopeLauncher:
             self.log_path.parent.mkdir(parents=True, exist_ok=True)
             self._log_file = self.log_path.open("w", encoding="utf-8", errors="replace")
             env = self._environment(gamescope)
+            on_log(
+                "SDL video driver: "
+                + (env.get("SDL_VIDEODRIVER") or "auto")
+            )
             self._process = subprocess.Popen(
                 self._command(gamescope),
                 stdin=subprocess.DEVNULL,
@@ -403,6 +461,7 @@ class GamescopeLauncher:
                 ["flatpak", "kill", "org.vinegarhq.Sober"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                env=self.clean_env(),
                 check=False,
             )
         self._remove_pid()
@@ -448,6 +507,7 @@ class GamescopeLauncher:
                 ["flatpak", "ps", "--columns=application"],
                 capture_output=True,
                 text=True,
+                env=self.clean_env(),
                 check=False,
                 timeout=5,
             )

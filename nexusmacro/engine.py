@@ -20,6 +20,7 @@ from typing import Optional
 import numpy as np
 
 from .automation.build import BuildMenu
+from .automation.classic import ClassicForfeit
 from .automation.context import (
     EngineCallbacks,
     EngineStopped,
@@ -63,6 +64,7 @@ class Engine:
         self.navigator = Navigator(self.runtime, self.detector)
         self.shop = ShopSession(self.runtime)
         self.build = BuildMenu(self.runtime, self.detector, self.navigator)
+        self.classic = ClassicForfeit(self.runtime, self.detector)
         self.finder = SpawnerFinder(self.runtime)
         self.scheduler = SpawnerScheduler(self.runtime)
         self.spawner_action = SpawnerAction(
@@ -79,6 +81,7 @@ class Engine:
         self._discard_until = 0.0
         self._last_battle_click = 0.0
         self._last_leftover_shop_scan = 0.0
+        self._classic_retry_at = 0.0
         self._restart_sent = False
         self._restart_sent_at = 0.0
 
@@ -343,13 +346,17 @@ class Engine:
                 self.shop.close()
                 return True
 
-        # 6. Manual Fuse / Best Place requested while the engine is running.
+        # 6. One-time Classic Forfeit setting (default OFF in the game).
+        if self._check_classic_forfeit(frame):
+            return True
+
+        # 7. Manual Fuse / Best Place requested while the engine is running.
         manual_kind = self._take_manual_optional()
         if manual_kind is not None:
             self._run_manual_optional(manual_kind, frame)
             return True
 
-        # 7. Manual spawner purchase requested from the UI.
+        # 8. Manual spawner purchase requested from the UI.
         if self._force_spawner.is_set():
             self._force_spawner.clear()
             self.runtime.log("Manual spawner purchase requested.", "action")
@@ -360,11 +367,11 @@ class Engine:
                 self._notify_manual_done()
             return True
 
-        # 8. Fuse / Best Place before Battle.
+        # 9. Fuse / Best Place before Battle.
         if self._run_pre_battle(frame):
             return True
 
-        # 9. Scheduled spawner purchase. Do not consume the schedule while
+        # 10. Scheduled spawner purchase. Do not consume the schedule while
         # the game is still loading or in the lobby: wait for a match HUD.
         if self.config.auto_spawners and self.detector.game_ui(frame):
             decision = self.scheduler.due()
@@ -376,7 +383,7 @@ class Engine:
                 self.scheduler.finish(decision, success)
                 return True
 
-        # 10. Start a battle when its button is available.
+        # 11. Start a battle when its button is available.
         return self._try_start_battle(frame)
 
     def _handle_reconnect(self, frame: np.ndarray) -> bool:
@@ -407,6 +414,51 @@ class Engine:
         except Exception as exc:
             self.runtime.log(f"Could not request a game restart: {exc}", "error")
             raise EngineStopped()
+        return True
+
+    def _notify_config(self, key: str, value) -> None:
+        callback = self.runtime.callbacks.config_changed
+        if callback is None:
+            return
+        try:
+            callback(key, value)
+        except Exception as exc:
+            self.runtime.log(f"Config callback failed: {exc}", "warning")
+
+    def _check_classic_forfeit(self, frame: np.ndarray) -> bool:
+        config = self.runtime.config
+        if config.classic_forfeit_checked:
+            return False
+        now = time.monotonic()
+        if now < self._classic_retry_at:
+            return False
+        if not self.detector.idle_match(frame):
+            return False
+
+        self.runtime.log(
+            "Classic Forfeit: checking the setting once.", "action"
+        )
+        try:
+            ok = self.classic.ensure()
+        except Exception as exc:
+            self.runtime.log(
+                f"Classic Forfeit: check failed: {exc}", "error"
+            )
+            ok = False
+        if ok:
+            config.classic_forfeit_checked = True
+            config.classic_forfeit_on = True
+            self._notify_config("classic_forfeit_checked", True)
+            self._notify_config("classic_forfeit_on", True)
+            self.runtime.log(
+                "Classic Forfeit: saved as checked; it will not run again.",
+                "success",
+            )
+        else:
+            self._classic_retry_at = now + 60.0
+            self.runtime.log(
+                "Classic Forfeit: not confirmed; retrying later.", "warning"
+            )
         return True
 
     def _run_manual_optional(self, kind: str, frame: np.ndarray) -> None:

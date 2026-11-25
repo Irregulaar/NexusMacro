@@ -27,6 +27,8 @@ class Config:
     fuse_wait_seconds: float = 5.0
     auto_best_place: bool = False
     auto_reconnect: bool = True
+    classic_forfeit_checked: bool = False
+    classic_forfeit_on: bool = False
 
     # Vision
     threshold: float = 0.88
@@ -178,6 +180,8 @@ class Config:
         self.auto_best_place = bool(self.auto_best_place)
         self.auto_reconnect = bool(self.auto_reconnect)
         self.auto_join = bool(self.auto_join)
+        self.classic_forfeit_checked = bool(self.classic_forfeit_checked)
+        self.classic_forfeit_on = bool(self.classic_forfeit_on)
         self.gamescope_grab_cursor = bool(self.gamescope_grab_cursor)
         digits = re.search(r"(\d{6,25})", str(self.game_place_id or ""))
         self.game_place_id = digits.group(1) if digits else ""

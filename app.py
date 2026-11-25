@@ -94,6 +94,105 @@ def _run_ui_selftest(output: Path) -> int:
     return 0 if ok else 1
 
 
+def _run_doctor() -> int:
+    """Print installation diagnostics without opening the UI or the game."""
+    import platform
+    import shutil
+    import subprocess
+
+    from nexusmacro.config import Config, config_file
+    from nexusmacro.launcher import GamescopeLauncher
+    from nexusmacro.paths import (
+        APP_VERSION,
+        DISPLAY_NAME,
+        bundled_template_dir,
+        data_dir,
+        project_root,
+        user_template_dir,
+    )
+    from nexusmacro.vision import SPECS_BY_KEY, Matcher
+
+    print(f"{DISPLAY_NAME} {APP_VERSION}")
+    print(f"System: {platform.platform()}")
+    print(f"Python: {platform.python_version()} · frozen={getattr(sys, 'frozen', False)}")
+    for key in (
+        "XDG_SESSION_TYPE",
+        "WAYLAND_DISPLAY",
+        "DISPLAY",
+        "XAUTHORITY",
+        "XDG_RUNTIME_DIR",
+    ):
+        print(f"{key}={os.environ.get(key, '')!r}")
+    print(f"Project: {project_root()}")
+    print(f"Config: {config_file()} (exists={config_file().exists()})")
+    print(f"Data: {data_dir()}")
+    print(f"User templates: {user_template_dir()}")
+
+    launcher = GamescopeLauncher(Config())
+    clean = launcher.clean_env()
+    for tool in ("flatpak", "xdg-open"):
+        print(f"{tool}: {shutil.which(tool) or 'NOT FOUND'}")
+    gamescope = launcher.find_gamescope()
+    print(f"gamescope: {gamescope or 'NOT FOUND'}")
+    if shutil.which("flatpak"):
+        try:
+            version = subprocess.run(
+                ["flatpak", "--version"],
+                capture_output=True,
+                text=True,
+                env=clean,
+                timeout=10,
+                check=False,
+            )
+            print(f"flatpak version: {version.stdout.strip() or version.stderr.strip()}")
+            info = subprocess.run(
+                ["flatpak", "info", "org.vinegarhq.Sober"],
+                capture_output=True,
+                text=True,
+                env=clean,
+                timeout=15,
+                check=False,
+            )
+            status = "OK" if info.returncode == 0 else "FAILED"
+            print(f"flatpak Sober: {status} (exit {info.returncode})")
+            detail = (info.stderr or info.stdout or "").strip()
+            if detail:
+                print(detail[:1500])
+        except Exception as exc:
+            print(f"flatpak check failed: {exc}")
+    if gamescope:
+        try:
+            version = subprocess.run(
+                [str(gamescope), "--version"],
+                capture_output=True,
+                text=True,
+                env=launcher._environment(gamescope),
+                timeout=10,
+                check=False,
+            )
+            print(
+                "gamescope version: "
+                + (version.stdout.strip() or version.stderr.strip())
+            )
+        except Exception as exc:
+            print(f"gamescope check failed: {exc}")
+
+    matcher = Matcher(
+        bundled_template_dir(),
+        user_template_dir(),
+        Config(),
+    )
+    missing = [
+        spec.filename
+        for spec in SPECS_BY_KEY.values()
+        if not matcher.template_path(spec.key).exists()
+    ]
+    print(f"Templates: {len(SPECS_BY_KEY) - len(missing)}/{len(SPECS_BY_KEY)} present")
+    if missing:
+        print("Missing:", ", ".join(missing))
+    return 0
+
+
 def _run_ui_config_test() -> int:
     """Open the real window offscreen and prove widget changes hit disk."""
     import json
@@ -202,6 +301,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Print the active config.json path and exit.",
     )
     parser.add_argument(
+        "--doctor",
+        action="store_true",
+        help="Print installation diagnostics and exit.",
+    )
+    parser.add_argument(
         "--selftest",
         action="store_true",
         help="Test the detector and templates without opening the UI.",
@@ -238,6 +342,8 @@ def main(argv: list[str] | None = None) -> int:
 
         print(config_file())
         return 0
+    if args.doctor:
+        return _run_doctor()
     if args.selftest:
         return _run_selftest()
     if args.ui_selftest:
@@ -247,8 +353,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.launch_test:
         return _run_launch_test()
 
-    from PySide6.QtCore import QLocale, QLockFile
-    from PySide6.QtGui import QFont, QIcon
+    from PySide6.QtCore import QLocale, QLockFile, Qt
+    from PySide6.QtGui import QFont, QGuiApplication, QIcon
     from PySide6.QtWidgets import QApplication, QMessageBox
 
     from nexusmacro.config import Config
@@ -258,9 +364,13 @@ def main(argv: list[str] | None = None) -> int:
         data_dir,
         icon_paths,
     )
+    from nexusmacro.ui_scale import desktop_scale
     from nexusmacro.ui import MainWindow
 
     QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
+    QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
     app = QApplication(sys.argv)
     app.setApplicationName("NexusMacro")
     app.setApplicationDisplayName(DISPLAY_NAME)
@@ -281,6 +391,25 @@ def main(argv: list[str] | None = None) -> int:
     except Exception:
         pass
 
+    # Scale the whole fixed-size UI with the desktop, then re-exec once so Qt
+    # applies the factor before creating any window. The design base is
+    # 1920x1080 (880x560 is ~46% x ~52% of it). Respect an explicit override.
+    if not os.environ.get("QT_SCALE_FACTOR") and not os.environ.get(
+        "NEXUSMACRO_SCALE_APPLIED"
+    ):
+        screen = app.primaryScreen()
+        if screen is not None:
+            geometry = screen.availableGeometry()
+            scale = desktop_scale(geometry.width(), geometry.height())
+            if abs(scale - 1.0) > 0.02:
+                os.environ["QT_SCALE_FACTOR"] = f"{scale:g}"
+                os.environ["NEXUSMACRO_SCALE_APPLIED"] = "1"
+                if getattr(sys, "frozen", False):
+                    exec_args = [sys.executable, *sys.argv[1:]]
+                else:
+                    exec_args = [sys.executable, *sys.argv]
+                os.execv(exec_args[0], exec_args)
+
     lock = QLockFile(str(data_dir() / "app.lock"))
     lock.setStaleLockTime(5000)
     if not lock.tryLock(100):
@@ -296,6 +425,10 @@ def main(argv: list[str] | None = None) -> int:
 
     config = Config.load()
     window = MainWindow(config, demo=args.demo)
+    screen = app.primaryScreen()
+    if screen is not None:
+        geometry = screen.availableGeometry()
+        window.move(geometry.center() - window.rect().center())
     window.show()
     return app.exec()
 

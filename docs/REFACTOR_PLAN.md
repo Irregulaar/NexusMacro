@@ -114,7 +114,7 @@ verificado (menú cerrado, tienda cerrada, batalla iniciada).
 - [x] Auditoría y plan (`docs/REFACTOR_PLAN.md`).
 - [x] Mapa de código y funciones (`docs/ARCHITECTURE.md`).
 - [x] Baseline de tests: 38 OK.
-- [x] Añadir tests de scheduler/detección antes de mover código (60 tests).
+- [x] Añadir tests de scheduler/detección antes de mover código (73 tests).
 
 ### Fase 1 — Visión y contexto
 - [x] Crear `automation/context.py` con `Runtime`.
@@ -145,7 +145,7 @@ verificado (menú cerrado, tienda cerrada, batalla iniciada).
 ### Fase 5 — Cierre
 - [x] Tests: scheduler, detección, tienda, build, stop/reconnect, config.
 - [x] `--selftest`, `--ui-selftest`, `--ui-config-test`.
-- [x] Build + install (1.5.4).
+- [x] Build + install (1.5.5).
 - [x] Actualizar `docs/ARCHITECTURE.md` con el estado final y `README.md`.
 
 ---
@@ -189,7 +189,7 @@ verificado (menú cerrado, tienda cerrada, batalla iniciada).
 | `play` find | 179 ms | ~30 ms |
 | `spawner1` find | 228 ms | ~66 ms |
 | `forfeit` find | 161 ms | ~16 ms |
-| Tests | 38 | 60 OK |
+| Tests | 38 | 73 OK |
 
 Cambios de comportamiento:
 - La tienda solo se abre/compra después de un clic de spawner.
@@ -220,3 +220,7 @@ Cambios de comportamiento:
   `<project>/config/`. Icono del usuario a 64/256/512 y `.desktop` con ruta
   absoluta. Quitado Open Templates; subtítulo “Build a Tower Defense
   Autopilot”.
+- 2026-11-24: **1.5.5** — arreglo de instalación en otras distros
+  (`LD_LIBRARY_PATH` de PyInstaller, SDL Wayland, errores de flatpak), ventana
+  proporcional a la pantalla, Tab con CCOEFF real y Classic Forfeit automático
+  una sola vez.

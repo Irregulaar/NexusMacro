@@ -40,3 +40,16 @@ echo "Nexus Macro installed."
 echo "  Binary: $HOME/.local/bin/NexusMacro"
 echo "  Menu:   search for «Nexus Macro»"
 echo "  Config: $HOME/.config/NexusMacro/config.json (created on first save)"
+echo
+
+if ! command -v flatpak >/dev/null 2>&1; then
+    echo "WARNING: flatpak is not installed. Install it before using Sober."
+elif ! flatpak info org.vinegarhq.Sober >/dev/null 2>&1; then
+    echo "WARNING: Sober (org.vinegarhq.Sober) is not installed."
+    echo "         flatpak install flathub org.vinegarhq.Sober"
+fi
+if ! command -v gamescope >/dev/null 2>&1; then
+    echo "WARNING: gamescope is not installed or not in PATH."
+    echo "         Install your distribution's gamescope package."
+fi
+echo "Run 'NexusMacro --doctor' at any time for a dependency report."

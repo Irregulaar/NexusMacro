@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 from typing import Optional
 
 import cv2
@@ -10,6 +11,12 @@ import numpy as np
 
 from ..vision import Match
 from .context import Runtime
+
+
+@dataclass
+class ClassicRow:
+    match: Match
+    on: bool
 
 
 class ScreenDetector:
@@ -88,20 +95,122 @@ class ScreenDetector:
         return self._reconnect_cache
 
     def tab_image(self, frame: np.ndarray) -> Optional[Match]:
-        """The leaderboard header crop: Tab is needed only while this shows."""
-        for scale in (1.0, 0.95, 1.05):
+        """The leaderboard header crop: Tab is needed only while this shows.
+
+        The header has a dark panel behind the text, so masked matching scores
+        poorly. Unmasked TM_CCOEFF_NORMED over the top-right band finds it
+        reliably (the header is the global maximum in that band).
+        """
+        height, width = frame.shape[:2]
+        rx = int(width * 0.55)
+        ry = 0
+        rw = width - rx
+        rh = int(height * 0.30)
+        region = frame[ry : ry + rh, rx : rx + rw]
+        if region.size == 0:
+            return None
+        gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
+        best: Optional[Match] = None
+        for scale in (0.85, 0.90, 0.95, 1.00, 1.05):
             try:
-                match = self.runtime.matcher.best(
-                    frame, "tabimage", threshold=0.62, scale=scale
+                data = self.runtime.matcher.template_data(
+                    "tabimage", scale=scale
                 )
             except Exception:
                 continue
-            if match is not None:
-                return match
-        return None
+            if gray.shape[0] < data.height or gray.shape[1] < data.width:
+                continue
+            result = cv2.matchTemplate(
+                gray, data.gray, cv2.TM_CCOEFF_NORMED
+            )
+            result = np.nan_to_num(
+                result, nan=-1.0, posinf=-1.0, neginf=-1.0
+            )
+            _, score, _, location = cv2.minMaxLoc(result)
+            if score < 0.45:
+                continue
+            if best is None or score > best.score:
+                x, y = location
+                best = Match(
+                    "tabimage",
+                    rx + x,
+                    ry + y,
+                    data.width,
+                    data.height,
+                    float(score),
+                )
+        return best
 
     def forfeit(self, frame: np.ndarray) -> Optional[Match]:
         return self.runtime.find(frame, "forfeit", 0.72)
+
+    def settings_button(self, frame: np.ndarray) -> Optional[Match]:
+        return self.runtime.find(frame, "settingsbutton", 0.72)
+
+    def classic_forfeit_row(
+        self, frame: np.ndarray
+    ) -> Optional[ClassicRow]:
+        """Locate the Classic Forfeit row and read its ON/OFF toggle.
+
+        The bundled template shows ON, so the left label/description crop is
+        used for matching; the toggle colour is sampled separately. This works
+        with both ON and OFF rows.
+        """
+        height, width = frame.shape[:2]
+        region_h = int(height * 0.98)
+        region_w = int(width * 0.48)
+        if region_h <= 0 or region_w <= 0:
+            return None
+        region = frame[:region_h, :region_w]
+        gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
+        best: Optional[ClassicRow] = None
+        for scale in (0.9, 0.95, 1.0, 1.05, 1.1):
+            try:
+                data = self.runtime.matcher.template_data(
+                    "classicforfeitsetting", scale=scale
+                )
+            except Exception:
+                continue
+            label_w = max(8, int(data.width * 0.70))
+            label = data.gray[:, :label_w]
+            if gray.shape[0] < label.shape[0] or gray.shape[1] < label.shape[1]:
+                continue
+            result = cv2.matchTemplate(gray, label, cv2.TM_CCOEFF_NORMED)
+            result = np.nan_to_num(
+                result, nan=-1.0, posinf=-1.0, neginf=-1.0
+            )
+            _, score, _, location = cv2.minMaxLoc(result)
+            if score < 0.55:
+                continue
+            if best is not None and score <= best.match.score:
+                continue
+            x, y = location
+            tx0 = x + int(data.width * 0.68)
+            tx1 = min(region_w, x + data.width)
+            ty0 = y
+            ty1 = min(region_h, y + int(data.height * 0.55))
+            on = False
+            if tx1 > tx0 and ty1 > ty0:
+                toggle = cv2.cvtColor(
+                    frame[ty0:ty1, tx0:tx1], cv2.COLOR_BGR2HSV
+                )
+                green = cv2.inRange(
+                    toggle, (35, 60, 60), (95, 255, 255)
+                )
+                area = max(1, (tx1 - tx0) * (ty1 - ty0))
+                on = int(np.count_nonzero(green)) / area >= 0.08
+            best = ClassicRow(
+                Match(
+                    "classicforfeitsetting",
+                    x,
+                    y,
+                    data.width,
+                    data.height,
+                    float(score),
+                ),
+                on,
+            )
+        return best
 
     def battle_active(self, frame: np.ndarray) -> bool:
         """A battle is running when Forfeit is on screen."""

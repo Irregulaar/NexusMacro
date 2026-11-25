@@ -25,6 +25,7 @@ class EngineController(QObject):
     finished = Signal()
     spawner_once_done = Signal()
     game_restart_requested = Signal(str)
+    config_changed = Signal(str, object)
 
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -47,6 +48,7 @@ class EngineController(QObject):
             preview=lambda frame, matches: self.preview.emit(frame, matches),
             manual_done=self._on_engine_manual_done,
             restart_game=lambda reason: self.game_restart_requested.emit(reason),
+            config_changed=lambda key, value: self.config_changed.emit(key, value),
         )
 
     def _on_engine_manual_done(self) -> None:

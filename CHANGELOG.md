@@ -4,6 +4,34 @@ All notable changes to Nexus Macro. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic
 versioning.
 
+## 1.5.5 - 2026-11-24
+
+### Fixed
+- **Installation on other distributions**: PyInstaller's `LD_LIBRARY_PATH` was
+  leaking into `gamescope` and `flatpak`, causing GLIBCXX/libstdc++ errors and
+  a false “Sober is not installed as a Flatpak” message. Child processes now use
+  `clean_env()`.
+- **Video subsystem / display errors**: SDL falls back to Wayland when there is
+  no X11 `DISPLAY`, a clear preflight error is shown for TTY/SSH sessions, and
+  `flatpak` errors include their stderr.
+- **Tab never detected**: `tabimage` now uses unmasked `TM_CCOEFF_NORMED` in
+  the top-right band at 0.85–1.05 scale, instead of the masked matcher that
+  ranked the header below dozens of bright patches.
+- **Window too small on large screens**: the whole UI scales with the desktop
+  size (base 1920×1080, clamp 0.80–2.00); override with `QT_SCALE_FACTOR`.
+
+### Added
+- One-time **Classic Forfeit** check: opens Settings, scrolls to the bottom,
+  reads the toggle, turns it ON if needed and stores
+  `classic_forfeit_checked`/`classic_forfeit_on` in config. It never runs again.
+- `settingsbutton.png` and `classicforfeitsetting.png` templates.
+- Launcher environment and graphical-session diagnostics.
+
+### Changed
+- `tabimage` matching is now independent of the HUD heuristic.
+- README troubleshooting for the installation errors, AI install prompt and
+  window scaling.
+
 ## 1.5.4 - 2026-11-24
 
 ### Added
@@ -75,11 +103,3 @@ versioning.
 ### Fixed
 - Pre-battle retry, stop cancelling Auto Reconnect, Play after Tab, shop
   session gating, live config updates and many smaller reliability issues.
-
-## 1.4.10 - 2026-11-24
-
-### Fixed
-- Saved-battle Discard is checked after Battle clicks and during Build
-  actions.
-- Build menu opening is verified by the Stop button.
-- One successful spawner purchase per 5-minute window.

@@ -236,6 +236,8 @@ class EngineTest(unittest.TestCase):
         self.config.close_shop = True
         self.config.spawner_timing = "clock"
         self.config.spawner_buy_on_start = False
+        # The one-time Classic Forfeit check has its own test.
+        self.config.classic_forfeit_checked = True
         self.matcher = Matcher(ROOT / "templates", ROOT / "templates", self.config)
         self.stop = threading.Event()
 
@@ -315,6 +317,8 @@ class EngineTest(unittest.TestCase):
         self.config.auto_spawners = True
         self.config.spawner_timing = "clock"
         self.config.spawner_buy_on_start = False
+        # The one-time Classic Forfeit check has its own test.
+        self.config.classic_forfeit_checked = True
         fake = FakeGame()
         callbacks, events = self._callbacks()
         engine = Engine(fake, self.config, self.matcher, callbacks, self.stop)
@@ -548,6 +552,31 @@ class EngineTest(unittest.TestCase):
         engine._maybe_hide_leaderboard(tab_frame)
         self.assertEqual(backend.keys, ["Tab"])
         self.assertTrue(engine._tab_done)
+
+    def test_tab_detects_a_scaled_header(self) -> None:
+        self.config.auto_battle = False
+        self.config.auto_spawners = False
+
+        class KeyBackend(FakeGame):
+            def __init__(self) -> None:
+                super().__init__()
+                self.keys: list[str] = []
+
+            def key(self, name: str) -> None:
+                self.keys.append(name)
+
+        frame = np.full((720, 1280, 3), (20, 9, 7), np.uint8)
+        tab = _load("tabimage.png")
+        scaled = cv2.resize(tab, None, fx=0.9, fy=0.9)
+        frame[60 : 60 + scaled.shape[0], 940 : 940 + scaled.shape[1]] = scaled
+        backend = KeyBackend()
+        engine = Engine(
+            backend, self.config, self.matcher, self._callbacks()[0], self.stop
+        )
+        engine._tab_after = 0.0
+        engine._last_tab_scan = 0.0
+        engine._maybe_hide_leaderboard(frame)
+        self.assertEqual(backend.keys, ["Tab"])
 
     def test_play_click_rearms_tab(self) -> None:
         self.config.auto_battle = False

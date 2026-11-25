@@ -184,6 +184,29 @@ class DetectionTest(unittest.TestCase):
         self.assertFalse(navigator.handle_discard(self.frame))
         self.assertEqual(len(self.backend.clicks), 1)
 
+    def test_settings_button_and_classic_forfeit_row(self) -> None:
+        frame = self.frame.copy()
+        _paste(frame, "settingsbutton.png", 230, 20)
+        _paste(frame, "classicforfeitsetting.png", 30, 500)
+        self.assertIsNotNone(self.detector.settings_button(frame))
+        row = self.detector.classic_forfeit_row(frame)
+        self.assertIsNotNone(row)
+        self.assertTrue(row.on)
+
+    def test_classic_forfeit_row_can_read_off(self) -> None:
+        frame = self.frame.copy()
+        _paste(frame, "classicforfeitsetting.png", 30, 500)
+        row_image = _load("classicforfeitsetting.png")
+        h, w = row_image.shape[:2]
+        frame[500 : 500 + int(h * 0.55), 30 + int(w * 0.68) : 30 + w] = (
+            45,
+            45,
+            45,
+        )
+        row = self.detector.classic_forfeit_row(frame)
+        self.assertIsNotNone(row)
+        self.assertFalse(row.on)
+
     def test_battle_button_means_idle_match(self) -> None:
         frame = self.frame.copy()
         _paste(frame, "battle1.png", 600, 560)
@@ -199,6 +222,7 @@ class EngineRefactorTest(unittest.TestCase):
         self.config.battle_cooldown = 0.0
         self.config.action_delay = 0.0
         self.config.idle_poll = 0.0
+        self.config.classic_forfeit_checked = True
         self.stop = threading.Event()
         callbacks = EngineCallbacks(
             log=lambda *a: None,
@@ -257,6 +281,25 @@ class EngineRefactorTest(unittest.TestCase):
         self.assertTrue(self.engine.tick(frame))
         self.assertTrue(self.backend.clicks)
         self.assertGreaterEqual(self.backend.clicks[0][0], 700)
+
+    def test_classic_forfeit_is_checked_once(self) -> None:
+        self.config.classic_forfeit_checked = False
+        self.config.save_debug_frames = False
+        frame = self.frame.copy()
+        _paste(frame, "settingsbutton.png", 230, 20)
+        _paste(frame, "classicforfeitsetting.png", 30, 500)
+        self.backend.frame = frame
+        events: list[tuple[str, bool]] = []
+        self.engine.runtime.callbacks.config_changed = (
+            lambda key, value: events.append((key, value))
+        )
+        self.assertTrue(self.engine.tick(frame))
+        self.assertTrue(self.engine.config.classic_forfeit_checked)
+        self.assertTrue(self.engine.config.classic_forfeit_on)
+        self.assertIn(("classic_forfeit_checked", True), events)
+        clicks = len(self.backend.clicks)
+        self.engine.tick(frame)
+        self.assertEqual(len(self.backend.clicks), clicks)
 
     def test_reconnect_button_requests_restart_without_clicking(self) -> None:
         self.config.save_debug_frames = False

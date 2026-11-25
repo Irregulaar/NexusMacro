@@ -31,7 +31,10 @@ itself while the macro runs.
 | :--: |
 | <img src="docs/screenshots/05-about.png" width="520" alt="About tab"> |
 
-The interface is a fixed **880×560** compact window with a dark purple theme.
+The interface is a compact **880×560** logical window with a dark purple
+theme. Qt scales the whole UI against the desktop size (base 1920×1080), so it
+keeps a similar relative size on 1080p, 1440p, 4K and small laptops. Set
+`QT_SCALE_FACTOR` to override the automatic factor.
 
 ---
 
@@ -45,6 +48,7 @@ The interface is a fixed **880×560** compact window with a dark purple theme.
 | **Auto Best Place** | Before Battle: uses the same Build menu as Fuse and clicks **Place Best** twice. If both are enabled, one menu handles both actions. |
 | **Buy Spawners Now** | Runs a full spawner purchase on demand, even while the macro is stopped. |
 | **Fuse Now / Best Place Now** | Manual actions; if a battle is running they Forfeit + Confirm first. |
+| **Classic Forfeit** | First time in a match it opens the game settings, scrolls to the bottom and turns **Classic Forfeit** ON. It is stored in the config and never checked again. |
 | **Auto Join** | Passes `roblox://experience?placeId=...` to Sober and clicks Play on the loading screen. |
 | **Auto Reconnect** | Relaunches Sober/gamescope if the game window disappears, and restarts the engine. |
 | **Reconnect screen** | Detects `reconnectbutton.png`, **never clicks it**, closes Sober/gamescope and relaunches from scratch; retries later if the connection fails. |
@@ -109,6 +113,7 @@ Install Nexus Macro on this Linux PC from:
 https://github.com/Irregulaar/NexusMacro
 
 1. Check that this is Linux x86_64 and a Wayland session. If not, stop and explain.
+   Run the commands from the desktop session, never from a TTY/SSH shell.
 2. Ask me before any sudo command. Detect my distro and install gamescope + flatpak
    (Arch: pacman, Fedora: dnf, Debian/Ubuntu: apt). Ensure the Flathub remote and
    install org.vinegarhq.Sober. If gamescope is unavailable, stop and tell me.
@@ -232,6 +237,21 @@ Build → Fuse All ×2 → (wait) → Place Best ×2 → Stop
 - Manual Fuse/Best Place while the engine is running is queued on the same
   engine, so two engines never fight over the Build menu.
 
+### Classic Forfeit (first run)
+
+The game ships with **Classic Forfeit OFF**. On the first match after starting
+the macro, it:
+
+1. Clicks the Roblox settings gear.
+2. Scrolls the settings panel to the bottom.
+3. Finds the **Classic Forfeit** row.
+4. Reads the toggle. If it is OFF, it clicks it and verifies the green ON state.
+5. Saves `classic_forfeit_checked=true` in `config.json` and **never checks
+   again**.
+
+If the row cannot be found, it closes the panel and retries later; it does not
+mark the check as done.
+
 ### Reconnect screen
 
 When Roblox shows the reconnect button, clicking it can leave the client stuck.
@@ -306,7 +326,8 @@ spawners1.png      spawners2.png     spawnerbutton3.png
 build1.png         fuseallbutton.png placebestbutton.png
 stopbutton.png     forfeitbutton.png confirmbutton.png
 discardbutton.png  playbutton.png    tabimage.png
-reconnectbutton.png
+reconnectbutton.png settingsbutton.png
+classicforfeitsetting.png
 buybutton.png      scrollspawner.png closebutton.png
 ```
 
@@ -327,6 +348,15 @@ same filename. Normal users never need this.
 
 Always start with the **Log** tab. Failed detections save a PNG and a `.json`
 sidecar in `~/.local/share/NexusMacro/captures/` (use **Open Captures**).
+
+For installation problems, run:
+
+```bash
+NexusMacro --doctor
+```
+
+It prints the session, config path, flatpak/Sober, gamescope, templates and
+display variables. Paste that output in a bug report.
 
 ### Spawners are not bought
 
@@ -400,7 +430,7 @@ QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-selftest
 QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-config-test
 ```
 
-Current status: **60 tests OK**.
+Current status: **73 tests OK**.
 
 ---
 
@@ -412,8 +442,8 @@ Current status: **60 tests OK**.
 3. Create and push a tag:
 
 ```bash
-git tag v1.5.4
-git push origin v1.5.4
+git tag v1.5.5
+git push origin v1.5.5
 ```
 
 The GitHub Actions workflow `.github/workflows/release.yml` builds the binary
@@ -424,8 +454,8 @@ To build the same tarball locally:
 
 ```bash
 ./scripts/package_release.sh
-# release/NexusMacro-1.5.4-linux-x86_64.tar.gz
-# release/NexusMacro-1.5.4-linux-x86_64.tar.gz.sha256
+# release/NexusMacro-1.5.5-linux-x86_64.tar.gz
+# release/NexusMacro-1.5.5-linux-x86_64.tar.gz.sha256
 ```
 
 The release tarball contains the binary, `install.sh`, the desktop entry, the

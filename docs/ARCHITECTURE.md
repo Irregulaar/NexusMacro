@@ -26,6 +26,7 @@ porque gamescope fija la resolución interna.
 | **Auto Best Place** | Igual que Fuse, pero con Place Best. |
 | **Auto Reconnect** | Si se pierde la ventana del juego y el macro lo lanzó, relanza Sober/gamescope y reinicia el motor. |
 | **Pantalla Reconnect** | Detecta `reconnectbutton.png`; no hace clic: cierra Sober/gamescope, relanza y reintenta si la conexión falla. |
+| **Classic Forfeit** | Primera partida: abre Settings, scrollea, activa Classic Forfeit si está OFF y guarda la verificación en config. |
 | **Auto Join** | Lanza Sober con `roblox://experience?placeId=...` y pulsa Play al aparecer. |
 | **Acciones manuales** | Buy Spawners Now, Fuse Now, Best Place Now, con etiquetas de progreso. |
 | **Launcher** | Lanza/para gamescope+Sober, minimiza/restaura la ventana host. |
@@ -128,6 +129,7 @@ bajo nivel.
 | `shop.py` | 390 | `ShopSession`: `wait_opened`, `buy_and_scroll`, `close`; tolera el parpadeo de la X (5 reintentos de evidencia) y hace scroll antes de rendirse. |
 | `build.py` | 300 | `BuildMenu`: `run_many` abre el menú una vez y ejecuta Fuse y/o Place ×2 con un solo Stop; Forfeit/Confirm; `last_discarded`. |
 | `spawner.py` | 366 | `SpawnerFinder` multi-escala + fallback full-frame; `SpawnerScheduler` reloj/intervalo/continuo/start; `SpawnerAction`. |
+| `classic.py` | 130 | `ClassicForfeit`: abre Settings, scrollea, detecta la fila, lee ON/OFF, activa y verifica. |
 
 ### `nexusmacro/controller.py` (134 líneas)
 `EngineController`: hilo del motor, señales Qt, acciones manuales y
@@ -142,6 +144,8 @@ Matcher de templates con máscara y NCC:
   candidatos verificados por NCC. El score final sigue siendo NCC. Tick idle
   medido: ~75 ms (antes 884 ms).
 - `_prepare_mask`: bordes, zonas oscuras, alpha y precio.
+- `tabimage` usa `TM_CCOEFF_NORMED` sin máscara en la banda superior derecha:
+  el header del leaderboard es el máximo global de esa zona.
 
 ### `nexusmacro/shopvision.py` (177 líneas)
 Detección por color de la tienda:
@@ -154,9 +158,11 @@ Detección por color de la tienda:
 X11/XTest: detección de display, captura, foco, movimiento suave + warp,
 clics, series, scroll, drag, teclas y texto.
 
-### `nexusmacro/launcher.py` (482 líneas)
+### `nexusmacro/launcher.py` (520 líneas)
 `GamescopeLauncher`: comando gamescope, entorno SDL/Wayland, deep link de
 Roblox, espera del display, PID/log, minimizar/restaurar host, stop y limpieza.
+`clean_env()` quita `LD_LIBRARY_PATH`/`PYTHONHOME` de PyInstaller antes de
+lanzar gamescope/flatpak, para que no carguen el `libstdc++` empaquetado.
 
 ### `nexusmacro/config.py` (272 líneas)
 `Config` + persistencia:
@@ -182,6 +188,11 @@ Nombres, versión, directorios XDG, migración TowerPilot, icono y recursos.
   `_launch_sober`, `_begin_launch`, `_on_launcher_ready`.
 - acciones manuales: `_buy_spawners_now`, `_run_optional_manual`.
 
+### `nexusmacro/ui_scale.py` (30 líneas)
+`desktop_scale(width, height)`: factor de escala para que la ventana fija
+880×560 mantenga un tamaño relativo similar en 1080p/1440p/4K/laptops.
+`app.py` aplica `QT_SCALE_FACTOR` una vez y reejecuta Qt antes de crear la UI.
+
 ### `nexusmacro/ui_pages.py` (673 líneas)
 `UiPagesMixin`: construcción de las páginas Connection, Automation, Settings,
 Log y About (cards, formularios, botones y textos). No contiene estado del
@@ -204,6 +215,7 @@ Utilidades X11 para encontrar/minimizar/restaurar la ventana host.
 | Scroll | `scroll_method`, `scroll_drag_px`, `scroll_drag_ms`, `scroll_settle_delay` | wheel, 220, 450, 1.2 |
 | Spawners | `spawner_timing`, `spawner_window_seconds`, `spawner_interval_minutes`, `spawner_poll_seconds`, `spawner_threshold`, `spawner_preference` | clock, 55, 5, 30, 0.80, auto |
 | Ritmo | `action_delay`, `battle_poll`, `battle_cooldown`, `idle_poll`, `cycle_delay`, `shop_open_timeout` | 0.07, 1.0, 2.0, 0.6, 1.0, 8.0 |
+| Classic Forfeit | `classic_forfeit_checked`, `classic_forfeit_on` | false, false |
 | Juego | `auto_join`, `game_place_id`, `window_width/height`, `gamescope_backend`, `gamescope_fps`, `gamescope_grab_cursor`, `minimize_on_start`, `gamescope_path`, `display`, `window_class` | 1280×720, sdl, 60, grab off, minimize on |
 | Debug | `save_debug_frames` | true |
 
@@ -236,6 +248,8 @@ Backup: `config.json.bak`.
 | close | closebutton.png | X de la tienda |
 | tabimage | tabimage.png | Cabecera del leaderboard: solo entonces se pulsa Tab |
 | reconnectbutton | reconnectbutton.png | Pantalla de reconexión: **nunca se pulsa**; se reinicia Sober/gamescope |
+| settingsbutton | settingsbutton.png | Engranaje de Settings del juego |
+| classicforfeitsetting | classicforfeitsetting.png | Fila Classic Forfeit (se detecta la etiqueta; el toggle se lee aparte) |
 
 Umbrales: `threshold` global 0.88; plantillas de acción bajan a 0.70–0.75;
 spawners usan `spawner_threshold` 0.80; shop por color no usa template salvo
@@ -284,7 +298,7 @@ Close/Scroll.
 | `tests/test_ui_config.py` | Guardado de toggles/números, sync de spin, Stop cancela reconnect. |
 | `tests/test_config_persistence.py` | Roundtrip, valores inválidos, JSON corrupto, backup, bool strings. |
 
-Total: **60 tests OK**.
+Total: **73 tests OK**.
 
 Comandos:
 
@@ -329,4 +343,7 @@ QT_QPA_PLATFORM=offscreen ./.venv/bin/python app.py --ui-config-test
   `tabimage.png`.
 - 2026-11-24: 1.5.4 pantalla Reconnect sin clic (reinicio completo), config
   portable en el proyecto, icono multi-tamaño/desktop, sin botón Open Templates
-  y subtítulo “Build a Tower Defense Autopilot”; 60 tests.
+  y subtítulo “Build a Tower Defense Autopilot”.
+- 2026-11-24: 1.5.5 entorno limpio para flatpak/gamescope, fallback SDL
+  Wayland, escala de UI por resolución, detección robusta de `tabimage` y
+  comprobación única de Classic Forfeit; 73 tests.
